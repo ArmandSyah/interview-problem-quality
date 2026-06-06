@@ -1,0 +1,61 @@
+{
+  "id": "0001-signal-window",
+  "title": "Signal Window",
+  "difficulty": "easy",
+  "tags": ["array", "sliding-window"],
+  "pattern_tags": ["sliding-window"],
+  "pattern_family": "sliding-window",
+  "primary_skill": "Maintain a bounded window with a running aggregate.",
+  "secondary_skills": ["Boundary handling", "Tie-breaking"],
+  "interview_signal": "Candidate can preserve an invariant while moving window endpoints.",
+  "expected_time_minutes": 20,
+  "description_md": "Given a list of signal strengths and a window size, return the maximum total signal seen in any contiguous window of that size.",
+  "examples": [
+    {
+      "input": "signals=[2, -1, 4, 3], size=2",
+      "output": "7",
+      "explanation": "The best window is [4, 3]."
+    }
+  ],
+  "constraints": [
+    "1 <= size <= len(signals)",
+    "Signal strengths may be negative."
+  ],
+  "starter_code": {
+    "python": "def max_signal_window(signals: list[int], size: int) -> int:\n    pass\n"
+  },
+  "test_cases": {
+    "python": [
+      {"input": [[2, -1, 4, 3], 2], "expected": 7},
+      {"input": [[5], 1], "expected": 5},
+      {"input": [[-4, -2, -7], 2], "expected": -6},
+      {"input": [[1, 2, 3, 4], 4], "expected": 10},
+      {"input": [[3, 3, 3], 2], "expected": 6},
+      {"input": [[10, -10, 10, -10, 10], 1], "expected": 10}
+    ]
+  },
+  "canonical_solution_md": "Track the total for the current fixed-size window. After the first complete window, slide one position at a time by removing the value that leaves and adding the value that enters. The maintained invariant is that the running total always equals the sum of the current window. The answer is the largest running total seen. This uses linear time and constant extra space.",
+  "fallback_hints": [
+    "Think about whether every window needs to be recomputed from scratch.",
+    "Maintain the sum of the current fixed-size window as the right edge moves.",
+    "After each step, remove the value that left the window, add the value that entered, and update the best total."
+  ],
+  "common_mistakes": [
+    "Initializing the best total to zero even when all values are negative.",
+    "Updating the best total before the first complete window exists."
+  ],
+  "follow_up_questions": [
+    "How would the approach change if the window size could vary within a range?",
+    "What edge cases matter when all signal strengths are negative?",
+    "What would you change if the signals arrived as a stream?"
+  ],
+  "suboptimal_solutions": [
+    {
+      "name": "Recompute every window",
+      "complexity": "O(n * size)",
+      "description": "Works for small inputs but repeats most of the sum work for overlapping windows."
+    }
+  ],
+  "source_inspiration": [],
+  "do_not_publish_reason": ""
+}
