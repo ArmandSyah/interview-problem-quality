@@ -1,0 +1,54 @@
+required_references:
+  - SKILL.md
+  - references/problem-schema.md
+  - references/source-use-policy.md
+  - references/hint-rules.md
+  - references/canonical-solution-rules.md
+  - references/test-design-rules.md
+  - references/senior-roi-patterns.md
+  - references/adversarial-review-rubric.md
+  - references/human-review-rubric.md
+  - references/lifecycle.md
+
+required_prompts:
+  - prompts/pattern-designer.md
+  - prompts/problem-author.md
+  - prompts/originality-reviewer.md
+  - prompts/constraint-reviewer.md
+  - prompts/test-breaker.md
+  - prompts/hint-leakage-reviewer.md
+  - prompts/senior-roi-reviewer.md
+  - prompts/revision-agent.md
+  - prompts/human-review-assistant.md
+
+required_scripts:
+  - scripts/validate_problem_json.py
+  - scripts/summarize_curriculum.py
+  - scripts/export_review_packet.py
+
+private_context_expected_elsewhere:
+  - repo: interview-mcp-ops
+    contents:
+      - private problem drafts
+      - accepted private problem library
+      - review reports
+      - source-library manifest
+      - human decisions
+
+source_use_policy:
+  allowed:
+    - pattern discovery
+    - difficulty calibration
+    - common mistake identification
+    - follow-up inspiration
+  prohibited:
+    - copying problem wording
+    - copying examples
+    - copying solution prose
+    - copying distinctive framing
+    - copying code solutions
+
+agent_rule: >
+  Before generating, reviewing, or revising a problem, verify that every required
+  reference for the task is available. If context is missing, stop and report the
+  exact missing file instead of proceeding from memory.

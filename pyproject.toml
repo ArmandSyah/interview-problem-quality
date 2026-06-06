@@ -1,0 +1,17 @@
+[project]
+name = "interview-problem-quality"
+version = "0.1.0"
+description = "Portable skill and deterministic checks for coding interview problem generation and review."
+requires-python = ">=3.12"
+dependencies = ["pyyaml>=6.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.5", "mypy>=1.10"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
