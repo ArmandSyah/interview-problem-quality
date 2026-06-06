@@ -1,0 +1,5 @@
+interface:
+  display_name: Interview Problem Quality
+  short_description: Generate, review, and validate original coding interview problems.
+  icon: clipboard-check
+  brand_color: "#2563eb"
