@@ -16,10 +16,12 @@ required_prompts:
   - prompts/originality-reviewer.md
   - prompts/constraint-reviewer.md
   - prompts/test-breaker.md
+  - prompts/source-similarity-reviewer.md
   - prompts/hint-leakage-reviewer.md
   - prompts/senior-roi-reviewer.md
   - prompts/revision-agent.md
   - prompts/human-review-assistant.md
+  - prompts/merge-review-findings.md
 
 required_scripts:
   - scripts/validate_problem_json.py
