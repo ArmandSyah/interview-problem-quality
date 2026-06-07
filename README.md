@@ -6,77 +6,234 @@ reviewing original coding interview problems.
 This repo is the quality/tooling layer. It does not store private drafts or the
 runtime MCP server.
 
-## Load the skill in an agent harness
+## What this repo is for
 
-Use this repo as explicit context whenever an agent generates, reviews, revises,
-or validates interview problems.
+Use this repo when an agent needs to:
 
-Core files:
+- generate candidate coding-interview problems from pattern specs
+- write problem JSON drafts
+- validate problem JSON mechanically
+- run adversarial review roles
+- revise drafts with traceable changes
+- export human review packets
+- summarize accepted curriculum coverage
 
-- `SKILL.md`: main skill instructions and workflow.
+Private drafts, review reports, packets, and accepted content belong in the
+private content repo, usually `interview-mcp-ops`. Runtime MCP server code
+belongs in `interview-mcp`.
+
+## Core files
+
+- `SKILL.md`: primary skill instructions.
 - `context-manifest.yaml`: required context contract.
-- `references/`: schema, hint rules, source-use policy, test rules, lifecycle,
+- `references/`: schema, source-use policy, hint rules, test rules, lifecycle,
   and review rubrics.
 - `prompts/`: role prompts for authoring and adversarial review.
-- `scripts/`: deterministic validators and packet/summary tools.
+- `scripts/`: deterministic validators, packet export, and curriculum summary.
+- `AGENTS.md`: simple agent instructions for tools that read `AGENTS.md`.
+- `CLAUDE.md`: Claude Code repo instructions.
+- `.kiro/steering/interview-problem-quality.md`: Kiro workspace steering.
 
-### Codex
+## Claude Code
 
-Open the repo that stores your private content, then tell Codex where this skill
-repo is mounted.
+Claude Code skills are directories that contain a required `SKILL.md`. The
+directory name becomes the slash command. Claude Code supports personal skills
+at `~/.claude/skills/<skill-name>/SKILL.md` and project skills at
+`.claude/skills/<skill-name>/SKILL.md`.
+
+### Option A: personal skill
+
+Use this when you want the skill available across projects.
+
+```bash
+mkdir -p ~/.claude/skills/interview-problem-quality
+cp -R <quality-repo>/* ~/.claude/skills/interview-problem-quality/
+```
+
+Then start Claude Code from the private content repo:
+
+```bash
+cd <ops-repo>
+claude
+```
+
+Invoke the skill:
+
+```text
+/interview-problem-quality
+
+Read the full pattern spec:
+batches/<batch>/pattern-specs/<spec>.md
+
+Generate 3 candidate problem concepts.
+Do not write files yet.
+Stop after recommending the strongest concept.
+```
+
+### Option B: project skill
+
+Use this when you want the skill tied to one workspace.
+
+```bash
+mkdir -p <ops-repo>/.claude/skills/interview-problem-quality
+cp -R <quality-repo>/* <ops-repo>/.claude/skills/interview-problem-quality/
+```
+
+Then:
+
+```bash
+cd <ops-repo>
+claude
+```
+
+Invoke:
+
+```text
+/interview-problem-quality
+```
+
+Do not commit copied skill files into the private content repo unless that is an
+intentional team decision.
+
+### Option C: additional directory
+
+Claude Code's `--add-dir` grants file access to another directory. Skills inside
+an added directory are only loaded automatically when that directory contains a
+`.claude/skills/...` layout. Granting file access is not the same as installing a
+skill.
+
+Use this shape if you keep shared skills elsewhere:
+
+```text
+<shared-dir>/.claude/skills/interview-problem-quality/SKILL.md
+```
+
+Then:
+
+```bash
+cd <ops-repo>
+claude --add-dir <shared-dir>
+```
+
+## Codex
+
+Codex uses `AGENTS.md` as repo guidance. This repo includes `AGENTS.md`, but the
+reusable workflow itself lives in `SKILL.md`.
+
+Practical setup:
+
+1. Open the private content repo in Codex.
+2. Put an `AGENTS.md` in that repo that points Codex to this quality repo.
+3. Make sure Codex can read this quality repo.
+4. If your Codex surface exposes a Skills installer, install this repo as a
+   skill there. If not, explicitly point Codex at `SKILL.md` in the prompt.
 
 Prompt shape:
 
 ```text
-Use the interview-problem-quality skill from:
+Use the quality workflow from:
   <quality-repo>/SKILL.md
 
-Before generating or reviewing, verify the required context from:
+Before generating or reviewing, verify:
   <quality-repo>/context-manifest.yaml
 
-Task:
-  Read the full pattern spec at <ops-repo>/batches/<batch>/pattern-specs/<spec>.md.
-  Generate 3 candidate problem concepts.
-  Do not write files yet.
-  Stop after recommending the strongest concept.
+Read the full pattern spec:
+  batches/<batch>/pattern-specs/<spec>.md
+
+Generate 3 candidate problem concepts.
+Do not write files yet.
+Stop after recommending the strongest concept.
 ```
 
-### Claude Code
+If using only `AGENTS.md`, place an agent instruction file in the private
+content repo root that points Codex to this quality repo and says when to read
+`SKILL.md`.
 
-Mount or open both repos in the same workspace:
+## Kiro
 
-- the private content repo, usually `interview-mcp-ops`
-- this quality repo, `interview-problem-quality`
-
-Then point Claude to the skill explicitly:
+Kiro uses steering files for persistent project knowledge. Workspace steering
+files live under:
 
 ```text
-Use <quality-repo>/SKILL.md and the required files in
-<quality-repo>/context-manifest.yaml.
+<repo>/.kiro/steering/
+```
 
-Read the full pattern spec:
-  <ops-repo>/batches/<batch>/pattern-specs/<spec>.md
+Global steering files live under:
 
+```text
+~/.kiro/steering/
+```
+
+This repo already includes:
+
+```text
+.kiro/steering/interview-problem-quality.md
+```
+
+To use this workflow in Kiro for the private content repo, copy or adapt that
+file into the ops repo:
+
+```bash
+mkdir -p <ops-repo>/.kiro/steering
+cp <quality-repo>/.kiro/steering/interview-problem-quality.md \
+  <ops-repo>/.kiro/steering/interview-problem-quality.md
+```
+
+Then open the ops repo in Kiro. Kiro should pick up workspace steering from
+`.kiro/steering/`. For a one-off task, also explicitly tell Kiro:
+
+```text
+Use <quality-repo>/SKILL.md and verify <quality-repo>/context-manifest.yaml.
+Read the full pattern spec at batches/<batch>/pattern-specs/<spec>.md.
 Generate 3 candidate concepts only. Do not save files yet.
 ```
 
-For high-token or multi-agent Claude workflows, give each agent one narrow role:
+## Cursor
 
-- pattern designer
-- problem author
-- originality reviewer
-- constraint reviewer
-- test breaker
-- hint leakage reviewer
-- senior ROI reviewer
-- revision agent
+Cursor supports project rules in `.cursor/rules`, user rules in settings,
+`AGENTS.md` in the project root, and legacy `.cursorrules`.
 
-Do not let the same role generate, approve, and promote a problem.
+For this workflow, use `AGENTS.md` for the simple repo-level instruction, or a
+project rule if you want Cursor-specific metadata.
 
-### Other harnesses
+### Simple setup with AGENTS.md
 
-Any harness can use the repo if it can read files and run Python scripts.
-Provide these inputs explicitly:
+Copy or adapt this repo's `AGENTS.md` into the private content repo root:
+
+```bash
+cp <quality-repo>/AGENTS.md <ops-repo>/AGENTS.md
+```
+
+Then add a short line to the copied file:
+
+```markdown
+For problem generation and review, read `<quality-repo>/SKILL.md` and
+`<quality-repo>/context-manifest.yaml` before working.
+```
+
+### Project rule setup
+
+Create a Cursor project rule from Cursor with `New Cursor Rule`, or create a
+rule under:
+
+```text
+<ops-repo>/.cursor/rules/
+```
+
+Use it to point Cursor at:
+
+```text
+<quality-repo>/SKILL.md
+<quality-repo>/context-manifest.yaml
+```
+
+Do not use `.cursorrules` for new setup unless you are maintaining legacy
+Cursor configuration.
+
+## Generic harness
+
+Any agent harness can use this repo if it can read files and run Python scripts.
+Provide these paths explicitly:
 
 ```text
 Quality repo:
@@ -92,21 +249,21 @@ Required manifest:
   <quality-repo>/context-manifest.yaml
 ```
 
-If required context is missing, the harness should stop and report the missing
+If any required context is missing, the harness must stop and report the missing
 file instead of continuing from memory.
 
-## Generate a question from a pattern spec
+## Question-generation workflow
 
-Question generation is a staged workflow. Do not jump straight from a pattern
-spec to an accepted problem.
+### 1. Generate candidate concepts
 
-### 1. Generate candidates
+Use the full pattern spec as context. Do not slice the file unless you are only
+previewing it in a terminal.
 
 ```text
-Use the interview-problem-quality skill.
+Use the interview-problem-quality workflow.
 
 Read the full pattern spec:
-  <ops-repo>/batches/<batch>/pattern-specs/<spec>.md
+  batches/<batch>/pattern-specs/<spec>.md
 
 Generate 3 candidate problem concepts.
 Do not write files yet.
@@ -121,7 +278,7 @@ After a human chooses a concept:
 Create one problem JSON draft from the selected concept.
 
 Save it to:
-  <ops-repo>/problems/drafts/<problem-id>.json
+  problems/drafts/<problem-id>.json
 
 Fix only mechanical validator errors.
 Stop after validation passes.
@@ -131,15 +288,19 @@ Validate:
 
 ```bash
 python <quality-repo>/scripts/validate_problem_json.py \
-  <ops-repo>/problems/drafts/<problem-id>.json \
+  problems/drafts/<problem-id>.json \
   --stage draft
 ```
+
+Mechanical validation checks structure, parseable starter code, test shape, and
+obvious code leakage. It does not prove originality, interview value, or public
+safety.
 
 ### 3. Run adversarial review
 
 ```text
 Run adversarial review for:
-  <ops-repo>/problems/drafts/<problem-id>.json
+  problems/drafts/<problem-id>.json
 
 Use these roles:
 - originality
@@ -150,24 +311,24 @@ Use these roles:
 - source-similarity if public-risk or clone-risk is suspected
 
 Write reports to:
-  <ops-repo>/reviews/agent/
+  reviews/agent/
 
 Apply only tracked revisions for concrete findings.
 Re-run validation.
 Do not create human decisions.
 ```
 
-### 4. Export a human packet
+### 4. Export a human review packet
 
 ```bash
 python <quality-repo>/scripts/export_review_packet.py \
-  <ops-repo>/problems/drafts/<problem-id>.json \
-  --review <ops-repo>/reviews/agent/<problem-id>.merged.md \
-  --review <ops-repo>/reviews/agent/<problem-id>.originality.md \
-  --review <ops-repo>/reviews/agent/<problem-id>.test-breaker.md \
-  --review <ops-repo>/reviews/agent/<problem-id>.hint-leakage.md \
-  --review <ops-repo>/reviews/agent/<problem-id>.senior-roi.md \
-  --out <ops-repo>/reviews/packets/<problem-id>.md
+  problems/drafts/<problem-id>.json \
+  --review reviews/agent/<problem-id>.merged.md \
+  --review reviews/agent/<problem-id>.originality.md \
+  --review reviews/agent/<problem-id>.test-breaker.md \
+  --review reviews/agent/<problem-id>.hint-leakage.md \
+  --review reviews/agent/<problem-id>.senior-roi.md \
+  --out reviews/packets/<problem-id>.md
 ```
 
 After packet export, the agent must stop. A human reads the packet and provides
@@ -209,3 +370,12 @@ Summarize accepted curriculum coverage:
 ```bash
 python scripts/summarize_curriculum.py <accepted-problems-dir>
 ```
+
+## Sources checked
+
+- Claude Code skills docs: https://code.claude.com/docs/en/skills
+- Claude custom skills help: https://support.claude.com/en/articles/12512198-how-to-create-custom-skills
+- Kiro steering docs: https://kiro.dev/docs/steering/
+- Cursor rules docs: https://docs.cursor.com/context/rules-for-ai
+- OpenAI Codex `AGENTS.md` docs: https://github.com/openai/codex/blob/main/docs/agents_md.md
+- AGENTS.md format repository: https://github.com/agentsmd/agents.md
